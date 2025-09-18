@@ -1,2 +1,2 @@
-# CS4530_u1536990_Hw2
-# CS4530_u1536990_Hw2
+Nguyen Jacob, u1536990, Chuddy50
+
