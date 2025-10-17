@@ -11,73 +11,49 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-
-    data class Course
-        (
-    val department: String,
-    val number: String,
-    val location: String
-) {
-    val title: String get() = "$department $number"
-}
-
-class CourseViewModel : ViewModel() {
-    private val _courses = mutableStateListOf<Course>()
-    val courses: List<Course> get() = _courses
-
-    fun addCourse(course: Course) {
-        _courses.add(course)
-    }
-
-    fun deleteCourse(course: Course) {
-        _courses.remove(course)
-    }
-}
+import androidx.lifecycle.ViewModelProvider
+import com.example.cs_hw2.ui.CourseUi
+import com.example.cs_hw2.ui.CourseViewModel
+import com.example.cs_hw2.ui.CourseViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            val vm: CourseViewModel = viewModel()
-            CourseApp(vm)
-        }
+
+        val app = application as CourseApp
+        val vm = ViewModelProvider(this, CourseViewModelFactory(app.repository))
+            .get(CourseViewModel::class.java)
+
+        setContent { CourseAppScreen(vm) }
     }
 }
 
 @Composable
-fun CourseApp(viewModel: CourseViewModel)
-{
+fun CourseAppScreen(viewModel: CourseViewModel) {
     var dept by remember { mutableStateOf("") }
     var num by remember { mutableStateOf("") }
     var loc by remember { mutableStateOf("") }
-    var showDetails by remember { mutableStateOf<Course?>(null) }
+    var showDetails by remember { mutableStateOf<CourseUi?>(null) }
 
-    Column(modifier = Modifier.padding(16.dp))
-    {
-        // this is input fields where user inputs information
+    val courses by viewModel.courses.collectAsState()
+
+    Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(value = dept, onValueChange = { dept = it }, label = { Text("Department") })
         OutlinedTextField(value = num, onValueChange = { num = it }, label = { Text("Number") })
         OutlinedTextField(value = loc, onValueChange = { loc = it }, label = { Text("Location") })
 
         Button(
-            onClick =
-                {
-                if (dept.isNotBlank() && num.isNotBlank() && loc.isNotBlank())
-                {
-                    viewModel.addCourse(Course(dept, num, loc))
+            onClick = {
+                if (dept.isNotBlank() && num.isNotBlank() && loc.isNotBlank()) {
+                    viewModel.addCourse(dept, num, loc)
                     dept = ""; num = ""; loc = ""
                 }
             },
             modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            Text("Add Course")
-        }
+        ) { Text("Add Course") }
 
-        // Course list
         LazyColumn {
-            items(viewModel.courses) { course ->
+            items(courses, key = { it.id }) { course ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -86,7 +62,7 @@ fun CourseApp(viewModel: CourseViewModel)
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(course.title)
-                    TextButton(onClick = { viewModel.deleteCourse(course) }) {
+                    TextButton(onClick = { viewModel.deleteById(course.id) }) {
                         Text("Delete")
                     }
                 }
@@ -101,9 +77,7 @@ fun CourseApp(viewModel: CourseViewModel)
                     Text("Department: ${course.department}\nNumber: ${course.number}\nLocation: ${course.location}")
                 },
                 confirmButton = {
-                    TextButton(onClick = { showDetails = null }) {
-                        Text("Close")
-                    }
+                    TextButton(onClick = { showDetails = null }) { Text("Close") }
                 }
             )
         }

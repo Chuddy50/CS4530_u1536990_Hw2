@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.kapt") // kapt plugin for Room
 }
 
 android {
@@ -14,7 +15,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -43,31 +43,34 @@ android {
 }
 
 dependencies {
+    // Compose BOM (once)
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
+
+    // Compose UI
     implementation("androidx.compose.ui:ui")
     implementation("androidx.activity:activity-compose:1.9.2")
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // AndroidX core/lifecycle
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
+
+    // --- Room (Kotlin DSL uses `val`, not `def`) ---
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(platform("androidx.compose:compose-bom:2024.09.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.activity:activity-compose:1.9.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-
-
-
-
 }
